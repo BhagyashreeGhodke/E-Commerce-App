@@ -20,6 +20,6 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // Use todo routes
-app.use("/api/home", router);
+app.use("/api/users", router);
 
 export { app };
