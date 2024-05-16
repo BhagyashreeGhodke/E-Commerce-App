@@ -1,30 +1,38 @@
 import mongoose from 'mongoose';
+import fs from 'fs';
+import Product from '../models/product.model.js'; // Adjust the path as necessary
 
-const productSchema = new mongoose.Schema({
-    url: { type: String, required: true },
-    detailUrl: { type: String, required: true },
-    title: {
-        type: new mongoose.Schema({
-            shortTitle: { type: String, required: true },
-            longTitle: { type: String, required: true }
-        }),
-        required: true
-    },
-    price: {
-        type: new mongoose.Schema({
-            mrp: { type: Number, required: true },
-            cost: { type: Number, required: true },
-            discount: { type: String, required: true }
-        }),
-        required: true
-    },
-    quantity: { type: Number, required: true },
-    description: { type: String, required: true },
-    discount: { type: String, required: true },
-    tagline: { type: String, required: true }
-});
+async function insertProducts() {
+    try {
+        // Read the CSV file
+        const csvData = fs.readFileSync('products.csv', 'utf-8');
 
-// Create the model
-const Product = mongoose.model('Product', productSchema);
+        // Parse the CSV data
+        const rows = csvData.split('\n').slice(1); // Skip header row
 
-export default Product;
+        // Convert CSV rows to product objects
+        const batchSize = 100; // Adjust batch size as needed
+        for (let i = 0; i < rows.length; i += batchSize) {
+            const batch = rows.slice(i, i + batchSize);
+            const products = batch.map(row => {
+                const [url, detailUrl, shortTitle, longTitle, mrp, cost, priceDiscount, quantity, description, discount, tagline] = row.split(',');
+                return {
+                    url, detailUrl, shortTitle, longTitle,
+                    price: { mrp: parseFloat(mrp) || 0, cost: parseFloat(cost), discount: priceDiscount || 0},
+                    quantity: parseInt(quantity),
+                    title: { shortTitle, longTitle }, // Assuming title is an object with shortTitle and longTitle
+                    description, discount, tagline
+                };
+            });
+            await Product.insertMany(products);
+            console.log(`Inserted batch ${i / batchSize + 1}`);
+        }
+        console.log('Products inserted successfully');
+    } catch (error) {
+        console.error('Error inserting products:', error);
+    } finally {
+        mongoose.disconnect();
+    }
+}
+
+export default insertProducts;
