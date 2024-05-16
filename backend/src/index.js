@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.db.js";
 import { app } from "./app.js"
-// import insertProducts from "./controllers/product.controller.js";
+// import insertProducts from "./controllers/database.controller.js";
 
 dotenv.config({
    
