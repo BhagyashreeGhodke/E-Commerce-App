@@ -5,7 +5,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 // Import todo routes
-import router from "./routes/routes.js";
+import productRouter from "./routes/productRoutes.js";
+import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -19,7 +20,10 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-// Use todo routes
-app.use("/api/users", router);
+// user routes
+app.use("/api/users", userRouter);
+
+// product routes
+app.use("/api", productRouter);
 
 export { app };

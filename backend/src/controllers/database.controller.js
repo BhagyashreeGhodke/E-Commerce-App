@@ -14,17 +14,51 @@ async function insertProducts() {
         const batchSize = 100; // Adjust batch size as needed
         for (let i = 0; i < rows.length; i += batchSize) {
             const batch = rows.slice(i, i + batchSize);
-            const products = batch.map(row => {
-                const [url, detailUrl, shortTitle, longTitle, mrp, cost, priceDiscount, quantity, description, discount, tagline] = row.split(',');
-                return {
+            const products = [];
+            for (const row of batch) {
+                const fields = row.split(',');
+                if (fields.length !== 19) {
+                    console.log(`Skipping row ${row}, incorrect number of fields`);
+                    continue; // Skip rows with incorrect number of fields
+                }
+
+                const [
+                    url, detailUrl, shortTitle, longTitle,
+                    mrp, cost, priceDiscount, quantity,
+                    description, discount, tagline,
+                    gender = 'women', sizes, category, color,
+                    brand, priceRange, discountRange
+                ] = fields;
+
+                // Check if any required fields are empty
+                if (
+                    !url || !detailUrl || !shortTitle || !longTitle ||
+                    !mrp || !cost || !priceDiscount || !quantity ||
+                    !description || !discount || !tagline ||
+                    !gender || !sizes || !category || !color ||
+                    !brand || !priceRange || !discountRange
+                ) {
+                    console.log(`Skipping row ${row}, missing required field`);
+                    continue; // Skip rows with missing required fields
+                }
+
+                const product = {
                     url, detailUrl, shortTitle, longTitle,
                     price: { mrp: parseFloat(mrp) || 0, cost: parseFloat(cost), discount: priceDiscount || 0},
                     quantity: parseInt(quantity),
-                    title: { shortTitle, longTitle }, // Assuming title is an object with shortTitle and longTitle
-                    description, discount, tagline
+                    title: { shortTitle, longTitle },
+                    description, discount, tagline,
+                    gender, sizes, category, color, brand,
+                    priceRange, discountRange
                 };
-            });
-            await Product.insertMany(products);
+
+                products.push(product);
+            }
+
+            if (products.length > 0) {
+                await Product.insertMany(products);
+            }
+
             console.log(`Inserted batch ${i / batchSize + 1}`);
         }
         console.log('Products inserted successfully');
